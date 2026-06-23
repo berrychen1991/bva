@@ -88,6 +88,7 @@
   th:first-child,td:first-child{text-align:left}
   thead th{color:var(--muted);font-size:12px;font-weight:700;background:#f7f9fb}
   tr.sub td{background:#eef3f8;font-weight:800;color:var(--navy);font-size:12px;padding:6px 8px}
+  tr.sub2 td{background:#fbf3df;color:#8a6d1f}
   tr.det td:first-child{padding-left:18px;color:var(--ink)}
   tr.det td:first-child .tag{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
   .tag.old{background:#9aa6b2}
@@ -95,6 +96,8 @@
   .tag.bonus{background:var(--gold)}
   tr.sum td{font-weight:800;border-top:2px solid var(--navy);background:#f3f7fb}
   tr.sum.opt td{border-top:1px solid var(--line)}
+  td.muted{color:var(--muted)}
+  td.red,td.red span{color:var(--warn)}
 
   /* bars */
   .bars{margin-top:16px}
@@ -227,24 +230,19 @@
     <div class="sectiongap"></div>
 
     <div class="card">
-      <h2>每月撥回收入明細：搬移前 vs 搬移後</h2>
+      <h2>每月撥回收入明細：搬移前 vs 搬移後 (試算)</h2>
       <table>
         <thead>
-          <tr><th>來源</th><th>每月（平均）</th><th>每年</th></tr>
+          <tr><th>來源</th><th>每月</th><th>月加碼</th><th>季加碼</th><th>每年</th></tr>
         </thead>
         <tbody>
-          <tr class="sub"><td colspan="3">搬移前（全部留舊單）</td></tr>
-          <tr class="det"><td><span class="tag old"></span>舊單 基本撥回</td><td>$<span id="b_oldBaseM">0</span></td><td>$<span id="b_oldBaseY">0</span></td></tr>
-          <tr class="det"><td><span class="tag bonus"></span>舊單 季加碼</td><td>$<span id="b_oldQM">0</span></td><td>$<span id="b_oldQY">0</span></td></tr>
-          <tr class="sum"><td>搬移前合計（含加碼）</td><td>$<span id="beforeBonusM">0</span></td><td>$<span id="beforeBonusY">0</span></td></tr>
+          <tr class="sub"><td colspan="5">搬移前（全部留舊單）</td></tr>
+          <tr class="det"><td><span class="tag old"></span>舊單</td><td>$<span id="bo_base">0</span></td><td class="muted">—</td><td>$<span id="bo_q">0</span></td><td class="red">$<span id="bo_year">0</span></td></tr>
 
-          <tr class="sub"><td colspan="3">搬移後（舊單剩餘 ＋ 新 BVA3）</td></tr>
-          <tr class="det"><td><span class="tag old"></span>舊單剩餘 基本撥回</td><td>$<span id="a_oldBaseM">0</span></td><td>$<span id="a_oldBaseY">0</span></td></tr>
-          <tr class="det"><td><span class="tag bonus"></span>舊單剩餘 季加碼</td><td>$<span id="a_oldQM">0</span></td><td>$<span id="a_oldQY">0</span></td></tr>
-          <tr class="det"><td><span class="tag new"></span>BVA3 基本撥回</td><td>$<span id="a_newBaseM">0</span></td><td>$<span id="a_newBaseY">0</span></td></tr>
-          <tr class="det"><td><span class="tag bonus"></span>BVA3 月加碼</td><td>$<span id="a_newBonusM">0</span></td><td>$<span id="a_newBonusY">0</span></td></tr>
-          <tr class="sum"><td>搬移後合計（基本）<span class="badge gray">保守</span></td><td>$<span id="afterBaseM">0</span></td><td>$<span id="afterBaseY">0</span></td></tr>
-          <tr class="sum opt"><td>搬移後合計（含加碼）<span class="badge">樂觀</span></td><td>$<span id="afterBonusM">0</span></td><td>$<span id="afterBonusY">0</span></td></tr>
+          <tr class="sub sub2"><td colspan="5">搬移後（舊單剩餘 ＋ 新 BVA3）</td></tr>
+          <tr class="det"><td><span class="tag old"></span>舊單剩餘</td><td>$<span id="ao_base">0</span></td><td class="muted">—</td><td>$<span id="ao_q">0</span></td><td>$<span id="ao_year">0</span></td></tr>
+          <tr class="det"><td><span class="tag new"></span>BVA3 新單</td><td>$<span id="an_base">0</span></td><td>$<span id="an_mb">0</span></td><td class="muted">—</td><td>$<span id="an_year">0</span></td></tr>
+          <tr class="sum"><td>搬移後合計</td><td>$<span id="sum_base">0</span></td><td>$<span id="sum_mb">0</span></td><td>$<span id="sum_q">0</span></td><td class="red">$<span id="sum_year">0</span></td></tr>
         </tbody>
       </table>
 
@@ -354,16 +352,20 @@ function calc(){
   const afterBaseM  = a_oldBaseM + a_newBaseM;
   const afterBonusM = a_oldBaseM + a_oldQM + a_newBaseM + a_newBonusM;
 
-  const setMY=(idM,idY,v)=>{ $(idM).textContent=fmt(v); $(idY).textContent=fmt(v*12); };
-  setMY('b_oldBaseM','b_oldBaseY',b_oldBaseM);
-  setMY('b_oldQM','b_oldQY',b_oldQM);
-  setMY('beforeBonusM','beforeBonusY',beforeBonusM);
-  setMY('a_oldBaseM','a_oldBaseY',a_oldBaseM);
-  setMY('a_oldQM','a_oldQY',a_oldQM);
-  setMY('a_newBaseM','a_newBaseY',a_newBaseM);
-  setMY('a_newBonusM','a_newBonusY',a_newBonusM);
-  setMY('afterBaseM','afterBaseY',afterBaseM);
-  setMY('afterBonusM','afterBonusY',afterBonusM);
+  // 明細表（每月 / 月加碼 / 季加碼 / 每年）。每年 = 基本×12 + 月加碼×12 + 季加碼×4
+  const set = (id,v)=>{ $(id).textContent=fmt(v); };
+  // 搬移前 — 舊單
+  const boBase=uOld*rOldBase, boQ=uOld*rOldQ;
+  set('bo_base',boBase); set('bo_q',boQ); set('bo_year',boBase*12 + boQ*4);
+  // 搬移後 — 舊單剩餘
+  const aoBase=remainOldUnits*rOldBase, aoQ=remainOldUnits*rOldQ;
+  set('ao_base',aoBase); set('ao_q',aoQ); set('ao_year',aoBase*12 + aoQ*4);
+  // 搬移後 — BVA3 新單
+  const anBase=newUnits*rBase, anMb=newUnits*rBonus;
+  set('an_base',anBase); set('an_mb',anMb); set('an_year',anBase*12 + anMb*12);
+  // 搬移後合計
+  set('sum_base',aoBase+anBase); set('sum_mb',anMb); set('sum_q',aoQ);
+  set('sum_year',(aoBase*12+aoQ*4)+(anBase*12+anMb*12));
 
   const incBaseM = afterBaseM - beforeBaseM;
   const incBonusM = afterBonusM - beforeBonusM;
