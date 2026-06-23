@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>南山 BVA 一二代 → BVA3 轉換試算</title>
+<style>
+  :root{
+    --navy:#0b3d6b; --navy2:#11528f; --gold:#c79a3a; --gold-l:#e9d29a;
+    --bg:#eef2f6; --card:#ffffff; --ink:#1c2733; --muted:#6b7785;
+    --good:#1a8f5a; --good-bg:#e7f6ee; --warn:#c0392b; --warn-bg:#fceae8;
+    --line:#dde4ec; --new:#11528f; --old:#9aa6b2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Microsoft JhengHei","PingFang TC","Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-text-size-adjust:100%}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;
+    padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header .logo{font-size:22px;font-weight:800;letter-spacing:1px}
+  header .logo .gold{color:var(--gold-l)}
+  header .sub{font-size:13px;opacity:.85}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px;display:grid;
+    grid-template-columns:380px 1fr;gap:18px;align-items:start}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:18px;box-shadow:0 2px 10px rgba(13,40,70,.05)}
+  .card h2{margin:0 0 14px;font-size:16px;color:var(--navy);
+    border-left:4px solid var(--gold);padding-left:10px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .field .hint{font-size:11px;color:var(--muted);font-weight:400}
+  .inputbox{position:relative}
+  .inputbox input{width:100%;padding:11px 40px 11px 12px;font-size:16px;
+    border:1px solid var(--line);border-radius:9px;background:#fafbfc;
+    transition:border .15s;-moz-appearance:textfield}
+  .inputbox input:focus{outline:none;border-color:var(--navy2);background:#fff}
+  .inputbox .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    font-size:13px;color:var(--muted)}
+  details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px}
+  details.adv summary{cursor:pointer;font-size:13px;color:var(--navy2);font-weight:700;
+    list-style:none;user-select:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"▸ ";}
+  details.adv[open] summary::before{content:"▾ ";}
+
+  /* slider */
+  .slider-card{background:linear-gradient(135deg,#0b3d6b,#11528f);color:#fff}
+  .slider-card h2{color:#fff;border-left-color:var(--gold-l)}
+  .pct-display{font-size:46px;font-weight:800;text-align:center;color:var(--gold-l);
+    line-height:1;margin:6px 0 4px}
+  .pct-sub{text-align:center;font-size:13px;opacity:.85;margin-bottom:16px}
+  input[type=range]{width:100%;height:8px;border-radius:8px;-webkit-appearance:none;
+    background:rgba(255,255,255,.28);outline:none;margin:8px 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;
+    border-radius:50%;background:var(--gold-l);border:3px solid #fff;cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+    background:var(--gold-l);border:3px solid #fff;cursor:pointer}
+  .quickbtns{display:flex;gap:6px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+  .quickbtns button{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+    padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;transition:.15s}
+  .quickbtns button:hover{background:rgba(255,255,255,.3)}
+
+  /* results */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr}}
+  .stat{background:#f7f9fb;border:1px solid var(--line);border-radius:10px;padding:13px}
+  .stat .k{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .stat .v{font-size:21px;font-weight:800;color:var(--navy)}
+  .stat .v small{font-size:13px;font-weight:600;color:var(--muted)}
+  .stat.hl{background:var(--good-bg);border-color:#bfe6cf}
+  .stat.hl .v{color:var(--good)}
+  .stat.cost{background:var(--warn-bg);border-color:#f3c9c3}
+  .stat.cost .v{color:var(--warn)}
+
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:14px}
+  th,td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-size:12px;font-weight:700;background:#f7f9fb}
+  tr.total td{font-weight:800;border-top:2px solid var(--navy);border-bottom:none;background:#f3f7fb}
+  .up{color:var(--good);font-weight:700}
+  .down{color:var(--warn);font-weight:700}
+
+  /* bar compare */
+  .bars{margin-top:10px}
+  .barrow{margin-bottom:14px}
+  .barrow .lbl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+  .barrow .lbl b{font-weight:800}
+  .bartrack{background:#eef2f6;border-radius:8px;height:30px;position:relative;overflow:hidden}
+  .barfill{height:100%;border-radius:8px;display:flex;align-items:center;
+    padding-left:10px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;
+    transition:width .35s ease}
+  .barfill.old{background:linear-gradient(90deg,#9aa6b2,#b6c0ca)}
+  .barfill.base{background:linear-gradient(90deg,#11528f,#2d77c0)}
+  .barfill.bonus{background:linear-gradient(90deg,#c79a3a,#e0bc6b)}
+
+  .note{font-size:12px;color:var(--muted);margin-top:14px;padding-top:12px;
+    border-top:1px dashed var(--line)}
+  .note b{color:var(--ink)}
+  .pill{display:inline-block;background:var(--good-bg);color:var(--good);
+    font-weight:800;padding:3px 10px;border-radius:20px;font-size:13px}
+  .sectiongap{height:16px}
+  footer{text-align:center;font-size:11px;color:var(--muted);padding:18px;max-width:1180px;margin:0 auto}
+  .badge{font-size:11px;background:var(--gold);color:#fff;padding:2px 8px;border-radius:6px;margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">南山人壽 <span class="gold">鑫月雙享 BVA3</span></div>
+  <div class="sub">一代／二代 BVA 轉換 BVA3 利益試算 · 業務輔助工具</div>
+</header>
+
+<div class="wrap">
+  <!-- ===== 左：輸入 ===== -->
+  <div>
+    <div class="card">
+      <h2>客戶現有保單資料</h2>
+      <div class="field">
+        <label>目前一二代單位數</label>
+        <div class="inputbox"><input id="uOld" type="number" value="100000" min="0" step="1"><span class="unit">單位</span></div>
+      </div>
+      <div class="field">
+        <label>目前一二代淨值 (NAV)</label>
+        <div class="inputbox"><input id="navOld" type="number" value="20" min="0.01" step="0.01"><span class="unit">元</span></div>
+      </div>
+      <div class="field">
+        <label>部分贖回手續費率 <span class="hint">(老代解約/部分提領費)</span></label>
+        <div class="inputbox"><input id="fRedeem" type="number" value="0" min="0" step="0.1"><span class="unit">%</span></div>
+      </div>
+      <div class="field">
+        <label>入場手續費率 <span class="hint">(BVA3 保費費用率)</span></label>
+        <div class="inputbox"><input id="fEntry" type="number" value="2.7" min="0" step="0.1"><span class="unit">%</span></div>
+      </div>
+
+      <details class="adv">
+        <summary>進階參數（撥回假設，可調整）</summary>
+        <div class="sectiongap"></div>
+        <div class="field">
+          <label>老代 每單位每月撥回金額</label>
+          <div class="inputbox"><input id="rOld" type="number" value="0.042" min="0" step="0.001"><span class="unit">元</span></div>
+        </div>
+        <div class="field">
+          <label>BVA3 進場淨值</label>
+          <div class="inputbox"><input id="navNew" type="number" value="10" min="0.01" step="0.01"><span class="unit">元</span></div>
+        </div>
+        <div class="field">
+          <label>BVA3 基本撥回 (NAV≥8)</label>
+          <div class="inputbox"><input id="rBase" type="number" value="0.042" min="0" step="0.001"><span class="unit">元/單位</span></div>
+        </div>
+        <div class="field">
+          <label>BVA3 月加碼撥回 (NAV&gt;10.3)</label>
+          <div class="inputbox"><input id="rBonus" type="number" value="0.050" min="0" step="0.001"><span class="unit">元/單位</span></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="sectiongap"></div>
+
+    <div class="card slider-card">
+      <h2>搬移比例</h2>
+      <div class="pct-display"><span id="pctVal">50</span>%</div>
+      <div class="pct-sub">將一二代保單帳戶價值搬移至 BVA3</div>
+      <input id="slider" type="range" min="0" max="100" value="50" step="1">
+      <div class="quickbtns">
+        <button data-p="25">25%</button>
+        <button data-p="50">50%</button>
+        <button data-p="75">75%</button>
+        <button data-p="100">全部</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 右：結果 ===== -->
+  <div>
+    <div class="card">
+      <h2>搬移結果總覽</h2>
+      <div class="grid2">
+        <div class="stat">
+          <div class="k">搬移帳戶價值（贖回前）</div>
+          <div class="v">$<span id="grossMoved">0</span></div>
+        </div>
+        <div class="stat cost">
+          <div class="k">手續費總成本（贖回＋入場）</div>
+          <div class="v">$<span id="feeCost">0</span></div>
+        </div>
+        <div class="stat">
+          <div class="k">實際投入 BVA3 淨額</div>
+          <div class="v">$<span id="netInvest">0</span></div>
+        </div>
+        <div class="stat hl">
+          <div class="k">換得 BVA3 單位數</div>
+          <div class="v"><span id="newUnits">0</span> <small>單位</small></div>
+        </div>
+      </div>
+
+      <div class="note" style="border-top:none;padding-top:14px">
+        同一筆錢，老代每單位 <b id="navOldTxt">20</b> 元、BVA3 進場 <b id="navNewTxt">10</b> 元，
+        搬移後單位數放大 <span class="pill"><span id="unitMult">0</span> 倍</span>
+        （已扣手續費）。撥回是<b>「每單位固定金額」</b>，單位越多、撥回越多。
+      </div>
+    </div>
+
+    <div class="sectiongap"></div>
+
+    <div class="card">
+      <h2>每月撥回收入：搬移前 vs 搬移後</h2>
+      <table>
+        <thead>
+          <tr><th>項目</th><th>每月撥回</th><th>每年撥回</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>① 完全不搬（全留老代）</td>
+            <td>$<span id="beforeM">0</span></td>
+            <td>$<span id="beforeY">0</span></td>
+          </tr>
+          <tr>
+            <td>② 搬移後 — 基本撥回<span class="badge">保守</span></td>
+            <td>$<span id="afterBaseM">0</span></td>
+            <td>$<span id="afterBaseY">0</span></td>
+          </tr>
+          <tr class="total">
+            <td>③ 搬移後 — 含月加碼<span class="badge">樂觀</span></td>
+            <td>$<span id="afterBonusM">0</span></td>
+            <td>$<span id="afterBonusY">0</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="bars">
+        <div class="barrow">
+          <div class="lbl"><span>不搬（全留老代）</span><b>$<span id="b1">0</span>/月</b></div>
+          <div class="bartrack"><div class="barfill old" id="bar1" style="width:0"></div></div>
+        </div>
+        <div class="barrow">
+          <div class="lbl"><span>搬移後 · 基本撥回</span><b>$<span id="b2">0</span>/月</b></div>
+          <div class="bartrack"><div class="barfill base" id="bar2" style="width:0"></div></div>
+        </div>
+        <div class="barrow">
+          <div class="lbl"><span>搬移後 · 含月加碼</span><b>$<span id="b3">0</span>/月</b></div>
+          <div class="bartrack"><div class="barfill bonus" id="bar3" style="width:0"></div></div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:6px">
+        <div class="stat hl">
+          <div class="k">每月撥回增加（基本）</div>
+          <div class="v">+$<span id="incBaseM">0</span></div>
+        </div>
+        <div class="stat hl">
+          <div class="k">每月撥回增加（含加碼）</div>
+          <div class="v">+$<span id="incBonusM">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sectiongap"></div>
+
+    <div class="card">
+      <h2>划算度分析（手續費回本）</h2>
+      <div class="grid2">
+        <div class="stat">
+          <div class="k">手續費回本期間（基本撥回）</div>
+          <div class="v"><span id="payBase">—</span></div>
+        </div>
+        <div class="stat">
+          <div class="k">手續費回本期間（含加碼）</div>
+          <div class="v"><span id="payBonus">—</span></div>
+        </div>
+      </div>
+      <div class="note">
+        <b>關鍵觀念：</b>回本速度與搬移比例<b>無關</b>（手續費成本與撥回增加都隨比例等比放大）。
+        搬越多 → 每月撥回絕對金額越多，但承擔的手續費成本與市場風險也越多。
+        建議依客戶<b>資金規劃與風險承受度</b>決定比例，並保留部分於老代分散。
+      </div>
+      <div class="note" style="border-top:none;padding-top:4px">
+        ※ 本試算為輔助溝通用途，撥回金額<b>不保證</b>，撥回來源可能為本金；
+        NAV&lt;8 不撥回、NAV≤10.3 無加碼。實際給付以保單條款與公司公告為準。
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  南山人壽鑫月雙享變額年金保險 (BVA3) · 本工具僅供業務人員試算參考，非正式文件，詳情請參閱保單條款與商品說明書。
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const ids = ['uOld','navOld','fRedeem','fEntry','rOld','navNew','rBase','rBonus'];
+const num = id => parseFloat($(id).value) || 0;
+const fmt = (n,d=0) => n.toLocaleString('zh-Hant',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function payback(cost, perMonth){
+  if(perMonth<=0) return '—';
+  const m = cost/perMonth;
+  if(m<=0) return '即時';
+  if(m<12) return fmt(m,1)+' 個月';
+  return fmt(m/12,1)+' 年（≈'+fmt(m,0)+'個月）';
+}
+
+function calc(){
+  const uOld=num('uOld'), navOld=num('navOld');
+  const fR=num('fRedeem')/100, fE=num('fEntry')/100;
+  const rOld=num('rOld'), navNew=num('navNew')||10;
+  const rBase=num('rBase'), rBonus=num('rBonus');
+  const p=num('slider')/100;
+
+  // 搬移金額流程
+  const grossMoved = p*uOld*navOld;                 // 贖回前帳戶價值
+  const afterRedeem = grossMoved*(1-fR);
+  const netInvest = afterRedeem*(1-fE);             // 投入 BVA3 淨額
+  const feeCost = grossMoved - netInvest;           // 手續費總成本
+  const newUnits = navNew>0 ? netInvest/navNew : 0; // 換得 BVA3 單位數
+
+  const movedOldUnits = p*uOld;
+  const unitMult = movedOldUnits>0 ? newUnits/movedOldUnits : 0;
+
+  // 撥回（每月）
+  const remainOldUnits = (1-p)*uOld;
+  const before = uOld*rOld;                                   // 全留老代
+  const afterBase  = remainOldUnits*rOld + newUnits*rBase;    // 搬後 基本
+  const afterBonus = remainOldUnits*rOld + newUnits*(rBase+rBonus); // 搬後 含加碼
+
+  const incBase = afterBase - before;
+  const incBonus = afterBonus - before;
+
+  // 輸出
+  $('grossMoved').textContent=fmt(grossMoved);
+  $('feeCost').textContent=fmt(feeCost);
+  $('netInvest').textContent=fmt(netInvest);
+  $('newUnits').textContent=fmt(newUnits);
+  $('unitMult').textContent=fmt(unitMult,2);
+  $('navOldTxt').textContent=fmt(navOld,2);
+  $('navNewTxt').textContent=fmt(navNew,2);
+
+  $('beforeM').textContent=fmt(before); $('beforeY').textContent=fmt(before*12);
+  $('afterBaseM').textContent=fmt(afterBase); $('afterBaseY').textContent=fmt(afterBase*12);
+  $('afterBonusM').textContent=fmt(afterBonus); $('afterBonusY').textContent=fmt(afterBonus*12);
+
+  $('incBaseM').textContent=fmt(incBase);
+  $('incBonusM').textContent=fmt(incBonus);
+
+  $('payBase').textContent=payback(feeCost,incBase);
+  $('payBonus').textContent=payback(feeCost,incBonus);
+
+  // bars
+  $('b1').textContent=fmt(before);
+  $('b2').textContent=fmt(afterBase);
+  $('b3').textContent=fmt(afterBonus);
+  const mx=Math.max(before,afterBase,afterBonus,1);
+  $('bar1').style.width=(before/mx*100)+'%';
+  $('bar2').style.width=(afterBase/mx*100)+'%';
+  $('bar3').style.width=(afterBonus/mx*100)+'%';
+}
+
+// events
+$('slider').addEventListener('input',()=>{ $('pctVal').textContent=$('slider').value; calc(); });
+ids.forEach(id=>$(id).addEventListener('input',calc));
+document.querySelectorAll('.quickbtns button').forEach(b=>{
+  b.addEventListener('click',()=>{ $('slider').value=b.dataset.p; $('pctVal').textContent=b.dataset.p; calc(); });
+});
+
+calc();
+</script>
+</body>
+</html>
