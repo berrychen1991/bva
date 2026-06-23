@@ -40,6 +40,13 @@
     padding:12px;margin-bottom:14px;text-align:center}
   .acctbox .k{font-size:12px;color:var(--good);font-weight:700;margin-bottom:3px}
   .acctbox .v{font-size:24px;font-weight:800;color:var(--good)}
+  .acctbox .acct-detail{font-size:11px;color:var(--good);margin-top:5px;opacity:.9}
+  .modeswitch{display:flex;gap:6px;margin-bottom:14px;background:#eef2f6;padding:4px;border-radius:10px}
+  .modeswitch .modebtn{flex:1;border:none;background:transparent;color:var(--muted);
+    font-size:12px;font-weight:700;padding:8px 6px;border-radius:7px;cursor:pointer;transition:.15s}
+  .modeswitch .modebtn.active{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(11,61,107,.3)}
+  .usd-divider{font-size:12px;font-weight:800;color:var(--navy2);margin:4px 0 10px;
+    padding:6px 10px;background:#eaf1f9;border-left:3px solid var(--navy2);border-radius:4px}
   details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px}
   details.adv summary{cursor:pointer;font-size:13px;color:var(--navy2);font-weight:700;
     list-style:none;user-select:none}
@@ -130,18 +137,42 @@
   <div>
     <div class="card">
       <h2>客戶現有舊單資料</h2>
+
+      <div class="modeswitch">
+        <button class="modebtn active" data-mode="single">單幣模式</button>
+        <button class="modebtn" data-mode="dual">雙幣模式（台幣＋美元）</button>
+      </div>
+
       <div class="field">
-        <label>目前舊單單位數</label>
+        <label id="lblUnit">目前舊單單位數</label>
         <div class="inputbox"><input id="uOld" type="number" value="100000" min="0" step="1"><span class="unit">單位</span></div>
       </div>
       <div class="field">
-        <label>目前舊單淨值 (NAV)</label>
+        <label id="lblNav">目前舊單淨值 (NAV)</label>
         <div class="inputbox"><input id="navOld" type="number" value="20" min="0.01" step="0.01"><span class="unit">元</span></div>
       </div>
 
+      <!-- 美元保單（雙幣模式才顯示） -->
+      <div id="usdBlock" style="display:none">
+        <div class="usd-divider">美元保單</div>
+        <div class="field">
+          <label>美元保單 單位數</label>
+          <div class="inputbox"><input id="uUsd" type="number" value="50000" min="0" step="1"><span class="unit">單位</span></div>
+        </div>
+        <div class="field">
+          <label>美元保單 淨值 (NAV)</label>
+          <div class="inputbox"><input id="navUsd" type="number" value="18" min="0.01" step="0.01"><span class="unit">美元</span></div>
+        </div>
+        <div class="field">
+          <label>美元匯率 <span class="hint">(1 美元 = ? 台幣)</span></label>
+          <div class="inputbox"><input id="fxRate" type="number" value="32" min="0.01" step="0.01"><span class="unit">元</span></div>
+        </div>
+      </div>
+
       <div class="acctbox">
-        <div class="k">目前舊單帳戶價值</div>
+        <div class="k">目前舊單帳戶價值（台幣）</div>
         <div class="v">$<span id="acctVal">0</span></div>
+        <div class="acct-detail" id="acctDetail" style="display:none"></div>
       </div>
 
       <div class="field">
@@ -300,33 +331,51 @@ const $ = id => document.getElementById(id);
 const num = id => parseFloat($(id).value) || 0;
 const fmt = (n,d=0) => (isFinite(n)?n:0).toLocaleString('zh-Hant',{minimumFractionDigits:d,maximumFractionDigits:d});
 
-function acctValue(){ return num('uOld')*num('navOld'); }
+let mode = 'single';  // 'single' | 'dual'
+
+// 台幣保單帳戶價值
+function twdValue(){ return num('uOld')*num('navOld'); }
+// 美元保單換算台幣後價值
+function usdValueTwd(){ return mode==='dual' ? num('uUsd')*num('navUsd')*num('fxRate') : 0; }
+// 合計帳戶價值（台幣）
+function acctValue(){ return twdValue() + usdValueTwd(); }
 
 function capAmount(){
   const av = acctValue();
-  // 金額不可超過帳戶價值
   if(num('amtInput') > av){ $('amtInput').value = Math.round(av); }
 }
 
 function calc(){
   const uOld=num('uOld'), navOld=num('navOld');
+  const uUsd=num('uUsd'), navUsd=num('navUsd'), fx=num('fxRate');
   const fR=num('fRedeem')/100, fE=num('fEntry')/100;
   const rOldBase=num('rOldBase'), rOldQ=num('rOldQ');
   const navNew=num('navNew')||10, rBase=num('rBase'), rBonus=num('rBonus');
+
   const av=acctValue();
   let amt=num('amtInput'); if(amt>av){amt=av;}
+  const p = av>0 ? amt/av : 0;   // 搬移比例（等比例自兩邊贖回）
 
   $('acctVal').textContent=fmt(av);
-  $('pctOfAcct').textContent = av>0 ? fmt(amt/av*100,1) : '0';
+  $('pctOfAcct').textContent = av>0 ? fmt(p*100,1) : '0';
+  if(mode==='dual'){
+    $('acctDetail').style.display='block';
+    $('acctDetail').textContent='台幣 $'+fmt(twdValue())+'　＋　美元折台幣 $'+fmt(usdValueTwd());
+  } else {
+    $('acctDetail').style.display='none';
+  }
 
   // 搬移流程
   const grossMoved = amt;
-  const movedOldUnits = navOld>0 ? grossMoved/navOld : 0;
   const afterRedeem = grossMoved*(1-fR);
   const netInvest = afterRedeem*(1-fE);
   const feeCost = grossMoved - netInvest;
   const newUnits = navNew>0 ? netInvest/navNew : 0;
-  const remainOldUnits = uOld - movedOldUnits;
+
+  // 舊單單位數（雙幣時為兩邊單位數合計，用於倍數對比）與混合平均淨值
+  const totalOldUnits = uOld + (mode==='dual'?uUsd:0);
+  const blendedNav = totalOldUnits>0 ? av/totalOldUnits : 0;
+  const movedOldUnits = p*totalOldUnits;
   const unitMult = movedOldUnits>0 ? newUnits/movedOldUnits : 0;
 
   $('grossMoved').textContent=fmt(grossMoved);
@@ -334,31 +383,21 @@ function calc(){
   $('netInvest').textContent=fmt(netInvest);
   $('newUnits').textContent=fmt(newUnits);
   $('unitMult').textContent=fmt(unitMult,2);
-  $('navOldTxt').textContent=fmt(navOld,2);
+  $('navOldTxt').textContent=fmt(mode==='dual'?blendedNav:navOld,2);
   $('navNewTxt').textContent=fmt(navNew,2);
 
-  // 每月平均撥回（季加碼月化 = /3）
-  const qM = r => r/3;
-  // 搬移前
-  const b_oldBaseM = uOld*rOldBase;
-  const b_oldQM    = uOld*qM(rOldQ);
-  const beforeBaseM  = b_oldBaseM;
-  const beforeBonusM = b_oldBaseM + b_oldQM;
-  // 搬移後
-  const a_oldBaseM = remainOldUnits*rOldBase;
-  const a_oldQM    = remainOldUnits*qM(rOldQ);
-  const a_newBaseM = newUnits*rBase;
-  const a_newBonusM= newUnits*rBonus;
-  const afterBaseM  = a_oldBaseM + a_newBaseM;
-  const afterBonusM = a_oldBaseM + a_oldQM + a_newBaseM + a_newBonusM;
+  // 舊單撥回合計（台幣）：台幣保單 ＋ 美元保單(每單位以美元計再×匯率)
+  const oldBaseM = uOld*rOldBase + (mode==='dual'? uUsd*rOldBase*fx : 0);  // 每月基本
+  const oldQ     = uOld*rOldQ    + (mode==='dual'? uUsd*rOldQ*fx    : 0);  // 每季加碼
+  const qM = r => r/3;  // 季加碼月化
 
   // 明細表（每月 / 月加碼 / 季加碼 / 每年）。每年 = 基本×12 + 月加碼×12 + 季加碼×4
   const set = (id,v)=>{ $(id).textContent=fmt(v); };
-  // 搬移前 — 舊單
-  const boBase=uOld*rOldBase, boQ=uOld*rOldQ;
+  // 搬移前 — 舊單（全部）
+  const boBase=oldBaseM, boQ=oldQ;
   set('bo_base',boBase); set('bo_q',boQ); set('bo_year',boBase*12 + boQ*4);
-  // 搬移後 — 舊單剩餘
-  const aoBase=remainOldUnits*rOldBase, aoQ=remainOldUnits*rOldQ;
+  // 搬移後 — 舊單剩餘（等比例縮放）
+  const aoBase=oldBaseM*(1-p), aoQ=oldQ*(1-p);
   set('ao_base',aoBase); set('ao_q',aoQ); set('ao_year',aoBase*12 + aoQ*4);
   // 搬移後 — BVA3 新單
   const anBase=newUnits*rBase, anMb=newUnits*rBonus;
@@ -367,12 +406,14 @@ function calc(){
   set('sum_base',aoBase+anBase); set('sum_mb',anMb); set('sum_q',aoQ);
   set('sum_year',(aoBase*12+aoQ*4)+(anBase*12+anMb*12));
 
-  const incBaseM = afterBaseM - beforeBaseM;
-  const incBonusM = afterBonusM - beforeBonusM;
-  $('incBaseM').textContent=fmt(incBaseM);
-  $('incBonusM').textContent=fmt(incBonusM);
+  // bars / 每月增加
+  const beforeBaseM  = boBase;
+  const beforeBonusM = boBase + qM(boQ);
+  const afterBaseM   = aoBase + anBase;
+  const afterBonusM  = aoBase + qM(aoQ) + anBase + anMb;
+  $('incBaseM').textContent=fmt(afterBaseM - beforeBaseM);
+  $('incBonusM').textContent=fmt(afterBonusM - beforeBonusM);
 
-  // bars（基本前/基本後/含加碼前/含加碼後）
   $('t1').textContent=fmt(beforeBaseM);
   $('t2').textContent=fmt(afterBaseM);
   $('t3').textContent=fmt(beforeBonusM);
@@ -384,13 +425,23 @@ function calc(){
   $('bar4').style.width=(afterBonusM/mx*100)+'%';
 }
 
+function setMode(m){
+  mode = m;
+  document.querySelectorAll('.modebtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+  $('usdBlock').style.display = (m==='dual') ? 'block' : 'none';
+  $('lblUnit').textContent = (m==='dual') ? '台幣保單 單位數' : '目前舊單單位數';
+  $('lblNav').textContent  = (m==='dual') ? '台幣保單 淨值 (NAV)' : '目前舊單淨值 (NAV)';
+  capAmount(); calc();
+}
+
 // 事件
-['uOld','navOld'].forEach(id=>$(id).addEventListener('input',()=>{ capAmount(); calc(); }));
+['uOld','navOld','uUsd','navUsd','fxRate'].forEach(id=>$(id).addEventListener('input',()=>{ capAmount(); calc(); }));
 ['fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus'].forEach(id=>$(id).addEventListener('input',calc));
 $('amtInput').addEventListener('input',()=>{ capAmount(); calc(); });
 document.querySelectorAll('.quickbtns button').forEach(b=>{
   b.addEventListener('click',()=>{ const v=Math.round(acctValue()*b.dataset.p/100); $('amtInput').value=v; calc(); });
 });
+document.querySelectorAll('.modebtn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 
 capAmount();
 calc();
