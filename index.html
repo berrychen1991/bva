@@ -26,6 +26,7 @@
     padding:18px;box-shadow:0 2px 10px rgba(13,40,70,.05)}
   .card h2{margin:0 0 14px;font-size:16px;color:var(--navy);
     border-left:4px solid var(--gold);padding-left:10px}
+  #ovTitle{user-select:none;-webkit-user-select:none}
   .field{margin-bottom:14px}
   .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px;font-weight:600}
   .field .hint{font-size:11px;color:var(--muted);font-weight:400}
@@ -123,6 +124,9 @@
   .sectiongap{height:16px}
   .badge{font-size:11px;background:var(--gold);color:#fff;padding:2px 8px;border-radius:6px;margin-left:6px;vertical-align:middle}
   .badge.gray{background:#9aa6b2}
+  .clearbtn{background:#fff;border:1px solid var(--line);color:var(--muted);font-size:12px;
+    padding:7px 16px;border-radius:20px;cursor:pointer;transition:.15s}
+  .clearbtn:hover{background:var(--warn-bg);border-color:#f3c9c3;color:var(--warn)}
   footer{text-align:center;font-size:11px;color:var(--muted);padding:18px;max-width:1180px;margin:0 auto}
 </style>
 </head>
@@ -226,18 +230,23 @@
         <button data-p="100">全部</button>
       </div>
     </div>
+
+    <div style="text-align:center;margin-top:12px">
+      <button id="clearStore" class="clearbtn">🗑 清除已存資料</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">輸入內容會自動儲存於本機瀏覽器，重新整理後保留</div>
+    </div>
   </div>
 
   <!-- ===== 右：結果 ===== -->
   <div>
     <div class="card">
-      <h2>搬移結果總覽</h2>
+      <h2 id="ovTitle">搬移結果總覽</h2>
       <div class="grid2">
         <div class="stat">
           <div class="k">搬移金額</div>
           <div class="v">$<span id="grossMoved">0</span></div>
         </div>
-        <div class="stat cost">
+        <div class="stat cost" id="feeStat">
           <div class="k">手續費總成本（贖回＋入場）</div>
           <div class="v">$<span id="feeCost">0</span></div>
         </div>
@@ -277,26 +286,7 @@
         </tbody>
       </table>
 
-      <div class="bars">
-        <div class="barrow">
-          <div class="lbl"><span>搬移前 · 基本撥回</span><b>$<span id="t1">0</span>/月</b></div>
-          <div class="bartrack"><div class="barfill before" id="bar1" style="width:0"></div></div>
-        </div>
-        <div class="barrow">
-          <div class="lbl"><span>搬移後 · 基本撥回</span><b>$<span id="t2">0</span>/月</b></div>
-          <div class="bartrack"><div class="barfill after" id="bar2" style="width:0"></div></div>
-        </div>
-        <div class="barrow">
-          <div class="lbl"><span>搬移前 · 含加碼</span><b>$<span id="t3">0</span>/月</b></div>
-          <div class="bartrack"><div class="barfill before" id="bar3" style="width:0"></div></div>
-        </div>
-        <div class="barrow">
-          <div class="lbl"><span>搬移後 · 含加碼</span><b>$<span id="t4">0</span>/月</b></div>
-          <div class="bartrack"><div class="barfill afterb" id="bar4" style="width:0"></div></div>
-        </div>
-      </div>
-
-      <div class="grid2" style="margin-top:6px">
+      <div class="grid2" style="margin-top:14px">
         <div class="stat hl">
           <div class="k">每月撥回增加（基本）</div>
           <div class="v">+$<span id="incBaseM">0</span></div>
@@ -332,6 +322,7 @@ const num = id => parseFloat($(id).value) || 0;
 const fmt = (n,d=0) => (isFinite(n)?n:0).toLocaleString('zh-Hant',{minimumFractionDigits:d,maximumFractionDigits:d});
 
 let mode = 'single';  // 'single' | 'dual'
+let hideFee = false;  // 隱藏手續費成本
 
 // 台幣保單帳戶價值
 function twdValue(){ return num('uOld')*num('navOld'); }
@@ -413,16 +404,6 @@ function calc(){
   const afterBonusM  = aoBase + qM(aoQ) + anBase + anMb;
   $('incBaseM').textContent=fmt(afterBaseM - beforeBaseM);
   $('incBonusM').textContent=fmt(afterBonusM - beforeBonusM);
-
-  $('t1').textContent=fmt(beforeBaseM);
-  $('t2').textContent=fmt(afterBaseM);
-  $('t3').textContent=fmt(beforeBonusM);
-  $('t4').textContent=fmt(afterBonusM);
-  const mx=Math.max(beforeBaseM,afterBaseM,beforeBonusM,afterBonusM,1);
-  $('bar1').style.width=(beforeBaseM/mx*100)+'%';
-  $('bar2').style.width=(afterBaseM/mx*100)+'%';
-  $('bar3').style.width=(beforeBonusM/mx*100)+'%';
-  $('bar4').style.width=(afterBonusM/mx*100)+'%';
 }
 
 function setMode(m){
@@ -434,17 +415,46 @@ function setMode(m){
   capAmount(); calc();
 }
 
-// 事件
-['uOld','navOld','uUsd','navUsd','fxRate'].forEach(id=>$(id).addEventListener('input',()=>{ capAmount(); calc(); }));
-['fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus'].forEach(id=>$(id).addEventListener('input',calc));
-$('amtInput').addEventListener('input',()=>{ capAmount(); calc(); });
-document.querySelectorAll('.quickbtns button').forEach(b=>{
-  b.addEventListener('click',()=>{ const v=Math.round(acctValue()*b.dataset.p/100); $('amtInput').value=v; calc(); });
-});
-document.querySelectorAll('.modebtn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+// ===== 本機儲存（重新整理後資料保留）=====
+const STORE_KEY='bva3calc';
+const SAVE_IDS=['uOld','navOld','uUsd','navUsd','fxRate','fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus','amtInput'];
+function saveState(){
+  try{
+    const data={mode:mode, hideFee:hideFee};
+    SAVE_IDS.forEach(id=>{ const el=$(id); if(el) data[id]=el.value; });
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const data=JSON.parse(localStorage.getItem(STORE_KEY));
+    if(!data) return;
+    SAVE_IDS.forEach(id=>{ const el=$(id); if(el && data[id]!==undefined && data[id]!=='') el.value=data[id]; });
+    if(data.mode) mode=data.mode;
+    if(typeof data.hideFee==='boolean') hideFee=data.hideFee;
+  }catch(e){}
+}
+function applyHideFee(){ const el=$('feeStat'); if(el) el.style.display = hideFee ? 'none' : ''; }
+// 隱密開關：點一下「搬移結果總覽」標題，即可隱藏／顯示手續費成本
+$('ovTitle').addEventListener('click',()=>{ hideFee=!hideFee; applyHideFee(); saveState(); });
 
-capAmount();
-calc();
+// 事件
+['uOld','navOld','uUsd','navUsd','fxRate'].forEach(id=>$(id).addEventListener('input',()=>{ capAmount(); calc(); saveState(); }));
+['fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus'].forEach(id=>$(id).addEventListener('input',()=>{ calc(); saveState(); }));
+$('amtInput').addEventListener('input',()=>{ capAmount(); calc(); saveState(); });
+document.querySelectorAll('.quickbtns button').forEach(b=>{
+  b.addEventListener('click',()=>{ const v=Math.round(acctValue()*b.dataset.p/100); $('amtInput').value=v; calc(); saveState(); });
+});
+document.querySelectorAll('.modebtn').forEach(b=>b.addEventListener('click',()=>{ setMode(b.dataset.mode); saveState(); }));
+
+// 清除按鈕
+const clrBtn=$('clearStore');
+if(clrBtn) clrBtn.addEventListener('click',()=>{ try{localStorage.removeItem(STORE_KEY);}catch(e){} location.reload(); });
+
+// 啟動：先還原資料，再套用模式並計算
+loadState();
+setMode(mode);
+applyHideFee();
 </script>
 </body>
 </html>
