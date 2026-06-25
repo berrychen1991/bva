@@ -19,6 +19,13 @@
   header .logo{font-size:22px;font-weight:800;letter-spacing:1px}
   header .logo .gold{color:var(--gold-l)}
   header .sub{font-size:13px;opacity:.85}
+  header .custbox{margin-left:auto;display:flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);
+    padding:6px 12px;border-radius:10px}
+  header .custbox span{font-size:13px;color:var(--gold-l);font-weight:700;white-space:nowrap}
+  header .custbox input{background:transparent;border:none;color:#fff;font-size:15px;
+    font-weight:700;width:130px;outline:none}
+  header .custbox input::placeholder{color:rgba(255,255,255,.55);font-weight:400}
   .wrap{max-width:1180px;margin:0 auto;padding:18px;display:grid;
     grid-template-columns:380px 1fr;gap:18px;align-items:start}
   @media(max-width:880px){.wrap{grid-template-columns:1fr}}
@@ -27,6 +34,8 @@
   .card h2{margin:0 0 14px;font-size:16px;color:var(--navy);
     border-left:4px solid var(--gold);padding-left:10px}
   #ovTitle{user-select:none;-webkit-user-select:none}
+  .nameecho:not(:empty){margin-left:8px;font-size:13px;font-weight:700;color:var(--gold);
+    background:#fbf3df;padding:2px 10px;border-radius:20px;vertical-align:middle}
   .field{margin-bottom:14px}
   .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px;font-weight:600}
   .field .hint{font-size:11px;color:var(--muted);font-weight:400}
@@ -48,6 +57,10 @@
   .modeswitch .modebtn.active{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(11,61,107,.3)}
   .usd-divider{font-size:12px;font-weight:800;color:var(--navy2);margin:4px 0 10px;
     padding:6px 10px;background:#eaf1f9;border-left:3px solid var(--navy2);border-radius:4px}
+  .orderswitch{display:flex;gap:5px;background:#eef2f6;padding:4px;border-radius:9px}
+  .orderswitch .orderbtn{flex:1;border:none;background:transparent;color:var(--muted);
+    font-size:12px;font-weight:700;padding:8px 4px;border-radius:6px;cursor:pointer;transition:.15s}
+  .orderswitch .orderbtn.active{background:var(--navy2);color:#fff}
   details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px}
   details.adv summary{cursor:pointer;font-size:13px;color:var(--navy2);font-weight:700;
     list-style:none;user-select:none}
@@ -128,14 +141,53 @@
     padding:7px 16px;border-radius:20px;cursor:pointer;transition:.15s}
   .clearbtn:hover{background:var(--warn-bg);border-color:#f3c9c3;color:var(--warn)}
   footer{text-align:center;font-size:11px;color:var(--muted);padding:18px;max-width:1180px;margin:0 auto}
+
+  /* tabs */
+  .tabbar{max-width:1180px;margin:0 auto;padding:14px 18px 0;display:flex;gap:8px}
+  .tabbar .tab{padding:10px 22px;border:1px solid var(--line);border-bottom:none;
+    background:#e3e9f0;color:var(--muted);font-weight:800;font-size:14px;
+    border-radius:10px 10px 0 0;cursor:pointer;transition:.15s}
+  .tabbar .tab.active{background:#fff;color:var(--navy);box-shadow:0 -2px 6px rgba(0,0,0,.04)}
+  .wrap-compare{max-width:1180px;margin:0 auto;padding:18px}
+
+  /* compare table */
+  #cmpTable{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+  #cmpTable th,#cmpTable td{border:1px solid var(--line);padding:9px 12px;text-align:right;white-space:nowrap}
+  #cmpTable td.rowlbl,#cmpTable th.rowlbl{text-align:left;background:#f7f9fb;font-weight:700;
+    color:var(--navy);position:sticky;left:0;z-index:1}
+  #cmpTable thead th{background:var(--navy);color:#fff;text-align:center}
+  #cmpTable thead th.rowlbl{background:var(--navy);color:#fff}
+  #cmpTable .amthead{position:relative}
+  #cmpTable .amthead input{width:120px;font-size:15px;font-weight:800;text-align:right;
+    border:none;border-radius:6px;padding:6px 24px 6px 8px;background:rgba(255,255,255,.95);color:var(--navy)}
+  #cmpTable .amthead input:focus{outline:2px solid var(--gold-l)}
+  #cmpTable .amthead .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;line-height:16px;
+    border:none;border-radius:50%;background:rgba(192,57,43,.85);color:#fff;font-size:12px;cursor:pointer;padding:0}
+  .addcol-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;
+    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .addcol-btn:hover{background:var(--navy2)}
+  #cmpTable tr.good td{color:var(--good);font-weight:800}
+  #cmpTable tr.cost td{color:var(--warn)}
+  #cmpTable tr.hl td{background:var(--good-bg)}
+  #cmpTable td.empty{background:#fafbfc}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">南山人壽 <span class="gold">鑫月雙享 BVA3</span></div>
   <div class="sub">舊單（一代／二代）轉換 BVA3 利益試算 · 業務輔助工具</div>
+  <div class="custbox">
+    <span>客戶：</span>
+    <input id="custName" type="text" placeholder="輸入客戶姓名" maxlength="20">
+  </div>
 </header>
 
+<div class="tabbar">
+  <button class="tab active" data-tab="single">單筆試算</button>
+  <button class="tab" data-tab="compare">贖回金額比較</button>
+</div>
+
+<div id="tab-single">
 <div class="wrap">
   <!-- ===== 左：輸入 ===== -->
   <div>
@@ -191,6 +243,14 @@
       <details class="adv">
         <summary>進階參數（撥回假設，可調整）</summary>
         <div class="sectiongap"></div>
+        <div class="field" id="orderField" style="display:none">
+          <label>贖回幣別順序 <span class="hint">(雙幣模式：搬移時先從哪邊解)</span></label>
+          <div class="orderswitch">
+            <button class="orderbtn active" data-order="prop">等比例</button>
+            <button class="orderbtn" data-order="usd">優先解美元</button>
+            <button class="orderbtn" data-order="twd">優先解台幣</button>
+          </div>
+        </div>
         <div class="field">
           <label>舊單 每單位 每月基本撥回</label>
           <div class="inputbox"><input id="rOldBase" type="number" value="0.042" min="0" step="0.001"><span class="unit">元</span></div>
@@ -240,7 +300,7 @@
   <!-- ===== 右：結果 ===== -->
   <div>
     <div class="card">
-      <h2 id="ovTitle">搬移結果總覽</h2>
+      <h2 id="ovTitle">搬移結果總覽<span class="nameecho"></span></h2>
       <div class="grid2">
         <div class="stat">
           <div class="k">搬移金額</div>
@@ -270,7 +330,7 @@
     <div class="sectiongap"></div>
 
     <div class="card">
-      <h2>每月撥回收入明細：搬移前 vs 搬移後 (試算)</h2>
+      <h2>每月撥回收入明細：搬移前 vs 搬移後 (試算)<span class="nameecho"></span></h2>
       <table>
         <thead>
           <tr><th>來源</th><th>每月</th><th>月加碼</th><th>季加碼</th><th>每年</th></tr>
@@ -311,6 +371,22 @@
     </div>
   </div>
 </div>
+</div><!-- /tab-single -->
+
+<div id="tab-compare" style="display:none">
+  <div class="wrap-compare">
+    <div class="card">
+      <h2>贖回金額比較表<span class="nameecho"></span></h2>
+      <div class="note" style="border-top:none;margin-top:0;padding-top:0">
+        同一組假設（手續費、淨值、撥回，皆在「單筆試算」分頁設定）下，比較不同搬移金額。請在最上排自由<b>新增／刪除</b>金額欄並直接輸入金額。
+        目前帳戶價值上限 <b>$<span id="cmpAcct">0</span></b>（超過會以帳戶價值計算）。
+      </div>
+      <div style="overflow:auto;margin-top:14px">
+        <table id="cmpTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer>
   南山人壽鑫月雙享變額年金保險 (BVA3) · 本工具僅供業務人員試算參考，非正式文件，詳情請參閱保單條款與商品說明書。
@@ -337,18 +413,11 @@ function capAmount(){
 }
 
 function calc(){
-  const uOld=num('uOld'), navOld=num('navOld');
-  const uUsd=num('uUsd'), navUsd=num('navUsd'), fx=num('fxRate');
-  const fR=num('fRedeem')/100, fE=num('fEntry')/100;
-  const rOldBase=num('rOldBase'), rOldQ=num('rOldQ');
-  const navNew=num('navNew')||10, rBase=num('rBase'), rBonus=num('rBonus');
-
-  const av=acctValue();
-  let amt=num('amtInput'); if(amt>av){amt=av;}
-  const p = av>0 ? amt/av : 0;   // 搬移比例（等比例自兩邊贖回）
+  const m = computeMetrics(num('amtInput'));
+  const av = m.av;
 
   $('acctVal').textContent=fmt(av);
-  $('pctOfAcct').textContent = av>0 ? fmt(p*100,1) : '0';
+  $('pctOfAcct').textContent = av>0 ? fmt(m.p*100,1) : '0';
   if(mode==='dual'){
     $('acctDetail').style.display='block';
     $('acctDetail').textContent='台幣 $'+fmt(twdValue())+'　＋　美元折台幣 $'+fmt(usdValueTwd());
@@ -356,71 +425,169 @@ function calc(){
     $('acctDetail').style.display='none';
   }
 
-  // 搬移流程
-  const grossMoved = amt;
-  const afterRedeem = grossMoved*(1-fR);
-  const netInvest = afterRedeem*(1-fE);
-  const feeCost = grossMoved - netInvest;
-  const newUnits = navNew>0 ? netInvest/navNew : 0;
-
-  // 舊單單位數（雙幣時為兩邊單位數合計，用於倍數對比）與混合平均淨值
-  const totalOldUnits = uOld + (mode==='dual'?uUsd:0);
-  const blendedNav = totalOldUnits>0 ? av/totalOldUnits : 0;
-  const movedOldUnits = p*totalOldUnits;
-  const unitMult = movedOldUnits>0 ? newUnits/movedOldUnits : 0;
-
-  $('grossMoved').textContent=fmt(grossMoved);
-  $('feeCost').textContent=fmt(feeCost);
-  $('netInvest').textContent=fmt(netInvest);
-  $('newUnits').textContent=fmt(newUnits);
-  $('unitMult').textContent=fmt(unitMult,2);
-  $('navOldTxt').textContent=fmt(mode==='dual'?blendedNav:navOld,2);
-  $('navNewTxt').textContent=fmt(navNew,2);
-
-  // 舊單撥回合計（台幣）：台幣保單 ＋ 美元保單(每單位以美元計再×匯率)
-  const oldBaseM = uOld*rOldBase + (mode==='dual'? uUsd*rOldBase*fx : 0);  // 每月基本
-  const oldQ     = uOld*rOldQ    + (mode==='dual'? uUsd*rOldQ*fx    : 0);  // 每季加碼
-  const qM = r => r/3;  // 季加碼月化
+  $('grossMoved').textContent=fmt(m.amt);
+  $('feeCost').textContent=fmt(m.feeCost);
+  $('netInvest').textContent=fmt(m.netInvest);
+  $('newUnits').textContent=fmt(m.newUnits);
+  $('unitMult').textContent=fmt(m.unitMult,2);
+  $('navOldTxt').textContent=fmt(mode==='dual'?m.blendedNav:num('navOld'),2);
+  $('navNewTxt').textContent=fmt(num('navNew')||10,2);
 
   // 明細表（每月 / 月加碼 / 季加碼 / 每年）。每年 = 基本×12 + 月加碼×12 + 季加碼×4
   const set = (id,v)=>{ $(id).textContent=fmt(v); };
-  // 搬移前 — 舊單（全部）
-  const boBase=oldBaseM, boQ=oldQ;
-  set('bo_base',boBase); set('bo_q',boQ); set('bo_year',boBase*12 + boQ*4);
-  // 搬移後 — 舊單剩餘（等比例縮放）
-  const aoBase=oldBaseM*(1-p), aoQ=oldQ*(1-p);
-  set('ao_base',aoBase); set('ao_q',aoQ); set('ao_year',aoBase*12 + aoQ*4);
-  // 搬移後 — BVA3 新單
-  const anBase=newUnits*rBase, anMb=newUnits*rBonus;
-  set('an_base',anBase); set('an_mb',anMb); set('an_year',anBase*12 + anMb*12);
-  // 搬移後合計
-  set('sum_base',aoBase+anBase); set('sum_mb',anMb); set('sum_q',aoQ);
-  set('sum_year',(aoBase*12+aoQ*4)+(anBase*12+anMb*12));
+  set('bo_base',m.oldBaseM); set('bo_q',m.oldQ); set('bo_year',m.oldBaseM*12 + m.oldQ*4);
+  set('ao_base',m.aoBase); set('ao_q',m.aoQ); set('ao_year',m.aoBase*12 + m.aoQ*4);
+  set('an_base',m.anBase); set('an_mb',m.anMb); set('an_year',m.anBase*12 + m.anMb*12);
+  set('sum_base',m.aoBase+m.anBase); set('sum_mb',m.anMb); set('sum_q',m.aoQ);
+  set('sum_year',(m.aoBase*12+m.aoQ*4)+(m.anBase*12+m.anMb*12));
 
-  // bars / 每月增加
-  const beforeBaseM  = boBase;
-  const beforeBonusM = boBase + qM(boQ);
-  const afterBaseM   = aoBase + anBase;
-  const afterBonusM  = aoBase + qM(aoQ) + anBase + anMb;
-  $('incBaseM').textContent=fmt(afterBaseM - beforeBaseM);
-  $('incBonusM').textContent=fmt(afterBonusM - beforeBonusM);
+  $('incBaseM').textContent=fmt(m.incBaseM);
+  $('incBonusM').textContent=fmt(m.incBonusM);
+  if(activeTab==='compare') renderCompare();
 }
 
 function setMode(m){
   mode = m;
   document.querySelectorAll('.modebtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
   $('usdBlock').style.display = (m==='dual') ? 'block' : 'none';
+  $('orderField').style.display = (m==='dual') ? 'block' : 'none';
   $('lblUnit').textContent = (m==='dual') ? '台幣保單 單位數' : '目前舊單單位數';
   $('lblNav').textContent  = (m==='dual') ? '台幣保單 淨值 (NAV)' : '目前舊單淨值 (NAV)';
   capAmount(); calc();
+  if(activeTab==='compare') renderCompare();
+}
+
+function setOrder(o){
+  redeemOrder=o;
+  document.querySelectorAll('.orderbtn').forEach(b=>b.classList.toggle('active', b.dataset.order===o));
+  calc();
+}
+
+// ===== 共用計算（單筆與多金額比較共用同一組公式）=====
+let redeemOrder = 'prop';  // 'prop' 等比例 | 'usd' 優先解美元 | 'twd' 優先解台幣
+
+// 依贖回順序，把搬移金額拆到台幣／美元兩個保單，回傳各自贖回值與剩餘比例
+function redeemSplit(amtIn){
+  const Vtwd=twdValue(), Vusd=usdValueTwd(), av=Vtwd+Vusd;
+  const amt=Math.max(0, Math.min(amtIn, av));
+  let rTwd=0, rUsd=0;
+  if(mode==='dual'){
+    if(redeemOrder==='usd'){ rUsd=Math.min(amt,Vusd); rTwd=amt-rUsd; }
+    else if(redeemOrder==='twd'){ rTwd=Math.min(amt,Vtwd); rUsd=amt-rTwd; }
+    else { const p=av>0?amt/av:0; rTwd=p*Vtwd; rUsd=p*Vusd; }   // 等比例
+  } else { rTwd=amt; }
+  return {amt, av, rTwd, rUsd,
+    fTwdRem: Vtwd>0 ? (Vtwd-rTwd)/Vtwd : 0,
+    fUsdRem: Vusd>0 ? (Vusd-rUsd)/Vusd : 0};
+}
+
+function computeMetrics(amtIn){
+  const uOld=num('uOld'), navOld=num('navOld');
+  const uUsd=num('uUsd'), navUsd=num('navUsd'), fx=num('fxRate');
+  const fR=num('fRedeem')/100, fE=num('fEntry')/100;
+  const rOldBase=num('rOldBase'), rOldQ=num('rOldQ');
+  const navNew=num('navNew')||10, rBase=num('rBase'), rBonus=num('rBonus');
+
+  const s=redeemSplit(amtIn);
+  const amt=s.amt, av=s.av;
+  const p = av>0 ? amt/av : 0;
+  const netInvest = amt*(1-fR)*(1-fE);
+  const feeCost = amt - netInvest;
+  const newUnits = navNew>0 ? netInvest/navNew : 0;
+
+  // 贖回的舊單單位數（兩邊各自）與混合平均淨值
+  const movedTwdUnits = navOld>0 ? s.rTwd/navOld : 0;
+  const movedUsdUnits = (mode==='dual' && navUsd>0) ? s.rUsd/navUsd : 0;
+  const movedOldUnits = movedTwdUnits + movedUsdUnits;
+  const unitMult = movedOldUnits>0 ? newUnits/movedOldUnits : 0;
+  const totalOldUnits = uOld + (mode==='dual'?uUsd:0);
+  const blendedNav = totalOldUnits>0 ? av/totalOldUnits : 0;
+
+  // 舊單撥回（台幣）：台幣保單與美元保單分開，各自 ×剩餘比例
+  const twdBase=uOld*rOldBase, twdQ=uOld*rOldQ;
+  const usdBase=(mode==='dual'? uUsd*rOldBase*fx : 0), usdQ=(mode==='dual'? uUsd*rOldQ*fx : 0);
+  const oldBaseM = twdBase + usdBase;
+  const oldQ     = twdQ + usdQ;
+  const aoBase = twdBase*s.fTwdRem + usdBase*s.fUsdRem;
+  const aoQ    = twdQ*s.fTwdRem    + usdQ*s.fUsdRem;
+  const anBase = newUnits*rBase, anMb=newUnits*rBonus;
+
+  const afterBaseM  = aoBase + anBase;
+  const afterBonusM = aoBase + aoQ/3 + anBase + anMb;
+  const sumYear = (aoBase*12+aoQ*4)+(anBase*12+anMb*12);
+
+  return {amt, av, p, feeCost, netInvest, newUnits, unitMult, blendedNav,
+    oldBaseM, oldQ, aoBase, aoQ, anBase, anMb,
+    afterBaseM, afterBonusM, sumYear,
+    incBaseM: afterBaseM - oldBaseM,
+    incBonusM: afterBonusM - (oldBaseM + oldQ/3),
+    rTwd:s.rTwd, rUsd:s.rUsd};
+}
+
+// ===== 多金額並排比較 =====
+let cmpAmounts = [1000000, 3000000, 5000000];
+let activeTab = 'single';
+const CMP_ROWS = [
+  {key:'pct',   label:'佔帳戶價值',         fn:m=>fmt(m.p*100,1)+'%'},
+  {key:'fee',   label:'手續費成本',         fn:m=>'$'+fmt(m.feeCost), cls:'cost', fee:true},
+  {key:'net',   label:'實際投入 BVA3',      fn:m=>'$'+fmt(m.netInvest)},
+  {key:'units', label:'換得 BVA3 單位數',   fn:m=>fmt(m.newUnits)},
+  {key:'mult',  label:'單位放大倍數',       fn:m=>fmt(m.unitMult,2)+' 倍', cls:'good'},
+  {key:'mBase', label:'每月撥回 · 基本',    fn:m=>'$'+fmt(m.afterBaseM)},
+  {key:'mBonus',label:'每月撥回 · 含加碼',  fn:m=>'$'+fmt(m.afterBonusM), cls:'hl'},
+  {key:'year',  label:'每年撥回 · 含加碼',  fn:m=>'$'+fmt(m.sumYear)},
+  {key:'incB',  label:'每月增加 · 基本',    fn:m=>'+$'+fmt(m.incBaseM), cls:'good'},
+  {key:'incBn', label:'每月增加 · 含加碼',  fn:m=>'+$'+fmt(m.incBonusM), cls:'good'},
+];
+function renderCompare(){
+  const t=$('cmpTable'); if(!t) return;
+  let h='<thead><tr><th class="rowlbl">搬移金額</th>';
+  cmpAmounts.forEach((a,i)=>{
+    h+='<th class="amthead"><input type="number" step="10000" min="0" data-i="'+i+'" value="'+a+'">'
+      +(cmpAmounts.length>1?'<button class="rm" data-i="'+i+'" title="刪除">×</button>':'')+'</th>';
+  });
+  h+='<th><button class="addcol-btn" id="addCmp">＋ 新增</button></th></tr></thead><tbody>';
+  CMP_ROWS.forEach(r=>{
+    h+='<tr class="'+(r.cls||'')+'" data-fee="'+(r.fee?1:0)+'"><td class="rowlbl">'+r.label+'</td>';
+    cmpAmounts.forEach((a,i)=>{ h+='<td id="cv_'+r.key+'_'+i+'">—</td>'; });
+    h+='<td class="empty"></td></tr>';
+  });
+  h+='</tbody>';
+  t.innerHTML=h;
+  t.querySelectorAll('.amthead input').forEach(inp=>{
+    inp.addEventListener('input',()=>{ cmpAmounts[+inp.dataset.i]=parseFloat(inp.value)||0; updateCompare(); saveState(); });
+  });
+  t.querySelectorAll('.rm').forEach(b=>{
+    b.addEventListener('click',()=>{ cmpAmounts.splice(+b.dataset.i,1); renderCompare(); saveState(); });
+  });
+  const ac=$('addCmp'); if(ac) ac.addEventListener('click',()=>{ cmpAmounts.push(0); renderCompare(); saveState(); });
+  updateCompare();
+}
+function updateCompare(){
+  const ca=$('cmpAcct'); if(ca) ca.textContent=fmt(acctValue());
+  document.querySelectorAll('#cmpTable tbody tr').forEach(tr=>{
+    if(tr.dataset.fee==='1') tr.style.display = hideFee ? 'none' : '';
+  });
+  cmpAmounts.forEach((a,i)=>{
+    const m=computeMetrics(a);
+    CMP_ROWS.forEach(r=>{ const c=$('cv_'+r.key+'_'+i); if(c) c.textContent=r.fn(m); });
+  });
+}
+function setTab(t){
+  activeTab=t;
+  document.querySelectorAll('.tabbar .tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  $('tab-single').style.display  = (t==='single')  ? '' : 'none';
+  $('tab-compare').style.display = (t==='compare') ? '' : 'none';
+  if(t==='compare') renderCompare();
+  saveState();
 }
 
 // ===== 本機儲存（重新整理後資料保留）=====
 const STORE_KEY='bva3calc';
-const SAVE_IDS=['uOld','navOld','uUsd','navUsd','fxRate','fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus','amtInput'];
+const SAVE_IDS=['custName','uOld','navOld','uUsd','navUsd','fxRate','fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus','amtInput'];
 function saveState(){
   try{
-    const data={mode:mode, hideFee:hideFee};
+    const data={mode:mode, redeemOrder:redeemOrder, hideFee:hideFee, cmpAmounts:cmpAmounts, activeTab:activeTab};
     SAVE_IDS.forEach(id=>{ const el=$(id); if(el) data[id]=el.value; });
     localStorage.setItem(STORE_KEY, JSON.stringify(data));
   }catch(e){}
@@ -431,21 +598,32 @@ function loadState(){
     if(!data) return;
     SAVE_IDS.forEach(id=>{ const el=$(id); if(el && data[id]!==undefined && data[id]!=='') el.value=data[id]; });
     if(data.mode) mode=data.mode;
+    if(data.redeemOrder) redeemOrder=data.redeemOrder;
     if(typeof data.hideFee==='boolean') hideFee=data.hideFee;
+    if(Array.isArray(data.cmpAmounts) && data.cmpAmounts.length) cmpAmounts=data.cmpAmounts;
+    if(data.activeTab) activeTab=data.activeTab;
   }catch(e){}
 }
-function applyHideFee(){ const el=$('feeStat'); if(el) el.style.display = hideFee ? 'none' : ''; }
+function applyHideFee(){ const el=$('feeStat'); if(el) el.style.display = hideFee ? 'none' : ''; updateCompare(); }
 // 隱密開關：點一下「搬移結果總覽」標題，即可隱藏／顯示手續費成本
 $('ovTitle').addEventListener('click',()=>{ hideFee=!hideFee; applyHideFee(); saveState(); });
+// 分頁切換
+document.querySelectorAll('.tabbar .tab').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 
 // 事件
 ['uOld','navOld','uUsd','navUsd','fxRate'].forEach(id=>$(id).addEventListener('input',()=>{ capAmount(); calc(); saveState(); }));
 ['fRedeem','fEntry','rOldBase','rOldQ','navNew','rBase','rBonus'].forEach(id=>$(id).addEventListener('input',()=>{ calc(); saveState(); }));
 $('amtInput').addEventListener('input',()=>{ capAmount(); calc(); saveState(); });
+function updateNameEchoes(){
+  const n=$('custName').value.trim();
+  document.querySelectorAll('.nameecho').forEach(el=>{ el.textContent = n ? ('客戶：'+n) : ''; });
+}
+$('custName').addEventListener('input',()=>{ updateNameEchoes(); saveState(); });
 document.querySelectorAll('.quickbtns button').forEach(b=>{
   b.addEventListener('click',()=>{ const v=Math.round(acctValue()*b.dataset.p/100); $('amtInput').value=v; calc(); saveState(); });
 });
 document.querySelectorAll('.modebtn').forEach(b=>b.addEventListener('click',()=>{ setMode(b.dataset.mode); saveState(); }));
+document.querySelectorAll('.orderbtn').forEach(b=>b.addEventListener('click',()=>{ setOrder(b.dataset.order); saveState(); }));
 
 // 清除按鈕
 const clrBtn=$('clearStore');
@@ -454,7 +632,10 @@ if(clrBtn) clrBtn.addEventListener('click',()=>{ try{localStorage.removeItem(STO
 // 啟動：先還原資料，再套用模式並計算
 loadState();
 setMode(mode);
+setOrder(redeemOrder);
 applyHideFee();
+setTab(activeTab);
+updateNameEchoes();
 </script>
 </body>
 </html>
